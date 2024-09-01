@@ -30,4 +30,3 @@ Enjoy with automation BOT
 |cron|`3.1.7`|
 |dotenv|`16.4.5`|
 |moment|`2.30.1`|
-|readline-sync|`1.4.10`|
