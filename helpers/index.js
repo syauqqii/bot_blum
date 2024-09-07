@@ -1,6 +1,6 @@
 const { formatDate } = require('./formatDate');
-const { retry, sleep } = require('./helper');
+const { retry, sleep, spinner } = require('./helper');
 
 module.exports = {
-    formatDate, retry, sleep
+    formatDate, retry, sleep, spinner
 };

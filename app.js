@@ -3,11 +3,12 @@ const readline = require('readline');
 
 const { setupCronJob, setupBalanceCheck, setupDailyReward, setupFarmReward } = require('./cronJob');
 const { getAllQueryIds, extractQueryIds } = require('./fileHandler');
-const { formatDate, sleep, retry } = require('./helpers');
+const { formatDate, sleep, retry, spinner } = require('./helpers');
 
 const {
     claimDailyReward, claimFarmReward, claimGamePoints, claimTaskReward, getBalance,
-    getGameId, getTasks, getToken, getUsername, startFarmingSession, startTask//, getTribe
+    getGameId, getTasks, getToken, getUsername, startFarmingSession, startTask
+    // , getTribe
 } = require('./api');
 
 const { header, menu } = require('./config/view');
@@ -93,7 +94,7 @@ let cronJobQueries = "";
                     const reward = await retry(() => claimDailyReward(token), 'claimDailyReward');
 
                     if (reward) {
-                        console.log(` # Daily reward claimed successfully!`);
+                        console.log(`\n   # Daily reward claimed successfully!`);
                     }
 
                     console.log(`   $ Balance '@${username}': ${balance.availableBalance} BP`);
@@ -114,16 +115,15 @@ let cronJobQueries = "";
                             i++;
                             try {
                                 const gameData = await retry(() => getGameId(token), 'getGameId', 10);
-                                
-                                console.log(`\n   > Wait for 1 minute. (${i}/${balance.playPasses})`);
-                                await sleep(60000);
+
+                                console.log(); await spinner(60000, i, balance.playPasses);
 
                                 const randPoints = Math.floor(Math.random() * (MAX_POINT - MIN_POINT + 1)) + MIN_POINT;
                                 const letsPlay = await retry(() => claimGamePoints(token, gameData.gameId, randPoints), 'claimGamePoints');
                                 
                                 if (letsPlay === 'OK') {
                                     const balance = await retry(() => getBalance(token), 'getBalance');
-                                    console.log(`   > Play game success! Your balance now: ${balance.availableBalance} BLUM (+${randPoints})`);
+                                    console.log(`\n   > Success, balance: ${balance.availableBalance} (+${randPoints} BP)`);
                                 }
                             } catch (error) {
                                 console.error('   ! An error occurred:', error);
@@ -131,6 +131,8 @@ let cronJobQueries = "";
                             }
                             counter--;
                         }
+                        await askQuestion(`\n   > Done. [ENTER]`);
+                        continue;
                     } else {
                         await askQuestion(`\n   ! You can't play, you have ${balance.playPasses} chance(s). [ENTER]`);
                         continue;
@@ -140,47 +142,43 @@ let cronJobQueries = "";
                 // @MENU: 4 - Auto Task
                 if (choice == '4') {
                     const tasksData = await retry(() => getTasks(token), 'getTasks');
+                    console.log();
 
-                    tasksData.forEach((category) => {
-                        category.tasks.forEach(async (task) => {
-                            if (task.status === 'FINISHED') {
-                                console.log(`   # Task "${task.title}" is already completed.`);
-                            } else if (task.status === 'NOT_STARTED') {
-                                console.log(`   # Task "${task.title}" is not started yet. Starting now...`);
-
+                    for (const category of tasksData) {
+                        for (const task of category.tasks) {
+                            if (task.status === 'NOT_STARTED') {
                                 const startedTask = await retry(() => startTask(token, task.id, task.title), 'startTask');
-
+                    
                                 if (startedTask) {
                                     console.log(`   # Task "${startedTask.title}" has been started!`);
-
+                    
                                     try {
-                                        const claimedTask = await retry(() => claimTaskReward(token, task.id), 'claimTaskReward');
-                                        console.log(`   # Task "${claimedTask.title}" has been claimed!`);
-                                        console.log(`   # Reward: ${claimedTask.reward}`);
+                                        const claimedTask = await retry(() => claimTaskReward(token, task.id), 'claimTaskReward', 2);
+                                        console.log(`     Task "${claimedTask.title}" has been claimed!`);
+                                        console.log(`     Reward: ${claimedTask.reward} BP`);
                                     } catch (error) {
                                         console.log(`   # Unable to claim task "${task.title}", please try to claim it manually.`);
                                     }
                                 }
-                            } else if (
-                                task.status === 'STARTED' ||
-                                task.status === 'READY_FOR_CLAIM'
-                            ) {
-                                try {
-                                    const claimedTask = await retry(() => claimTaskReward(token, task.id), 'claimTaskReward');
 
+                                console.log();
+                            } else if (['STARTED', 'READY_FOR_CLAIM'].includes(task.status)) {
+                                try {
+                                    const claimedTask = await retry(() => claimTaskReward(token, task.id), 'claimTaskReward', 2);
+                    
                                     console.log(`   > Task "${claimedTask.title}" has been claimed!`);
-                                    console.log(`   > Reward: ${claimedTask.reward}`);
+                                    console.log(`   > Reward: ${claimedTask.reward} BP`);
                                 } catch (error) {
                                     console.log(`   ! Unable to claim task "${task.title}".`);
                                 }
-                            }
-                            
-                            const delay = Math.floor(Math.random() * (MAX_DELAY_PER_TASK - MIN_DELAY_PER_TASK + 1)) + MIN_DELAY_PER_TASK;
-                            await sleep(delay);
-                        });
-                    });
 
-                    await askQuestion('\n   ! Back to main menu [ENTER]');
+                                console.log();
+                            }
+                            await sleep(Math.floor(Math.random() * (MAX_DELAY_PER_TASK - MIN_DELAY_PER_TASK + 1)) + MIN_DELAY_PER_TASK);
+                        }
+                    }
+
+                    await askQuestion('\n   # Back to main menu [ENTER]');
                 }
                 
                 // @MENU: 5 - Claim Farm Reward

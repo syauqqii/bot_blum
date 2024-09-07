@@ -7,7 +7,7 @@ async function getTasks(token) {
         headers: { Authorization: token },
     });
 
-    return data;
+    return data[0].subSections;
 }
 
 module.exports = getTasks;

@@ -15,7 +15,7 @@ async function startTask(token, taskId, title) {
             error.response && error.response.data &&
             error.response.data.message === 'Task type does not support start'
         ) {
-            console.error(`\n   ! Start task "${title}" failed, the task is not started yet.`);
+            console.error(`   ! Start task "${title}" failed, the task is not started yet.`);
         } else {
             console.log(error.response.data.message);
         }
