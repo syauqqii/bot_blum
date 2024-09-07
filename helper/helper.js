@@ -1,5 +1,3 @@
-const readline = require('readline');
-
 const sleep = (ms) => new Promise(
     (resolve) => setTimeout(resolve, ms)
 );
@@ -11,7 +9,7 @@ const retry = async (fn, fName, maxRetries=5, delay=5) => {
         } catch (error) {
             if (i === maxRetries - 1) throw error;
 
-            console.log(` [!] Retrying "${fName}" (${i + 1}/${maxRetries})`);
+            console.log(` ! Retrying "${fName}" (${i + 1}/${maxRetries})`);
             await sleep(delay * 1000); 
         }
     }
