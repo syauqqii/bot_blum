@@ -1,6 +1,5 @@
 const fs = require('fs');
 
-
 function writeJSONFile(file, data) {
     fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
 }
@@ -10,7 +9,7 @@ const decodeURL = (url) => {
         const urlObj = new URL(url);
         const hashParams = new URLSearchParams(urlObj.hash.substring(1));
         const tgWebAppData = hashParams.get('tgWebAppData');
-        
+
         if (!tgWebAppData) {
             console.log("\n   ! Cannot find 'tgWebAppData' parameter.");
             return null;
@@ -21,26 +20,6 @@ const decodeURL = (url) => {
     } catch (error) {
         console.error("\n   ! Invalid URL.");
         return null;
-    }
-};
-
-const extractQueryIds = (file, url) => {
-    try {
-        const decodedData = decodeURL(url);
-        if (!decodedData) {
-            throw new Error("\n   ! Failed to decode URL data.");
-        }
-
-        const queryData = parseQueryData(decodedData);
-        if (!queryData) {
-            throw new Error("\n   ! Failed to parse query data.");
-        }
-
-        saveQueryId(file, queryData);
-        return true;
-    } catch (error) {
-        console.error(`\n   ! Error extracting query IDs: ${error.message}`);
-        return false;
     }
 };
 
@@ -89,6 +68,26 @@ const saveQueryId = (file, queryData) => {
         writeJSONFile(file, data);
     } else {
         console.log("\n   ! Query ID already exists in the file.");
+    }
+};
+
+const extractQueryIds = (file, url) => {
+    try {
+        const decodedData = decodeURL(url);
+        if (!decodedData) {
+            throw new Error("\n   ! Failed to decode URL data.");
+        }
+
+        const queryData = parseQueryData(decodedData);
+        if (!queryData) {
+            throw new Error("\n   ! Failed to parse query data.");
+        }
+
+        saveQueryId(file, queryData);
+        return true;
+    } catch (error) {
+        console.error(`\n   ! Error extracting query IDs: ${error.message}`);
+        return false;
     }
 };
 
