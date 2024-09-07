@@ -30,6 +30,8 @@ function askQuestion(query) {
 }
 
 let cronJobRunning = false;
+let cronJobID = 0;
+let cronJobQueries = "";
 
 (async () => {
     let choice;
@@ -81,6 +83,7 @@ let cronJobRunning = false;
                 }
 
                 const queries = queryData[accountChoice - 1].query_id;
+                cronJobQueries = queries;
                 token = await retry(() => getToken(queries), 'getToken');
                 const username = await retry(() => getUsername(token), 'getUsername');
                 const balance = await retry(() =>getBalance(token), 'getBalance');
@@ -97,17 +100,7 @@ let cronJobRunning = false;
                     const runAgain = await askQuestion('\n   ? Run daily reward claim auto 24h? (y/n): ');
 
                     if (['yes', 'ye', 'y'].includes(runAgain.toLowerCase())) {
-                        cronJobRunning = true;
-                        console.log(' [-] Setting up daily reward cron job...');
-                        setupDailyReward(queries).then(() => {
-                            console.log(' [-] Daily reward cron job has been completed.');
-                            cronJobRunning = false;
-                        }).catch(error => {
-                            console.error(' [!] Error setting up daily reward cron job:', error);
-                            cronJobRunning = false;
-                        });
-
-                        console.log(' [-] Cron job is set, exiting the main loop.');
+                        cronJobID = 1; cronJobRunning = true;
                         break;
                     }
                 }
@@ -122,7 +115,7 @@ let cronJobRunning = false;
                             try {
                                 const gameData = await retry(() => getGameId(token), 'getGameId', 10);
                                 
-                                console.log(`\n [>] Wait for 1 minute.. (${i}/${balance.playPasses})`);
+                                console.log(`\n   > Wait for 1 minute. (${i}/${balance.playPasses})`);
                                 await sleep(60000);
 
                                 const randPoints = Math.floor(Math.random() * (MAX_POINT - MIN_POINT + 1)) + MIN_POINT;
@@ -130,16 +123,16 @@ let cronJobRunning = false;
                                 
                                 if (letsPlay === 'OK') {
                                     const balance = await retry(() => getBalance(token), 'getBalance');
-                                    console.log(` [>] Play game success! Your balance now: ${balance.availableBalance} BLUM (+${randPoints})`);
+                                    console.log(`   > Play game success! Your balance now: ${balance.availableBalance} BLUM (+${randPoints})`);
                                 }
                             } catch (error) {
-                                console.error(' [!] An error occurred:', error);
+                                console.error('   ! An error occurred:', error);
                                 break;
                             }
                             counter--;
                         }
                     } else {
-                        await askQuestion(`\n [!] You can't play, you have ${balance.playPasses} chance(s). [ENTER]`);
+                        await askQuestion(`\n   ! You can't play, you have ${balance.playPasses} chance(s). [ENTER]`);
                         continue;
                     }
                 }
@@ -151,21 +144,21 @@ let cronJobRunning = false;
                     tasksData.forEach((category) => {
                         category.tasks.forEach(async (task) => {
                             if (task.status === 'FINISHED') {
-                                console.log(`⏭️  Task "${task.title}" is already completed.`);
+                                console.log(`   # Task "${task.title}" is already completed.`);
                             } else if (task.status === 'NOT_STARTED') {
-                                console.log(` [#] Task "${task.title}" is not started yet. Starting now...`);
+                                console.log(`   # Task "${task.title}" is not started yet. Starting now...`);
 
                                 const startedTask = await retry(() => startTask(token, task.id, task.title), 'startTask');
 
                                 if (startedTask) {
-                                    console.log(` [#] Task "${startedTask.title}" has been started!`);
+                                    console.log(`   # Task "${startedTask.title}" has been started!`);
 
                                     try {
                                         const claimedTask = await retry(() => claimTaskReward(token, task.id), 'claimTaskReward');
-                                        console.log(` [#] Task "${claimedTask.title}" has been claimed!`);
-                                        console.log(` [#] Reward: ${claimedTask.reward}`);
+                                        console.log(`   # Task "${claimedTask.title}" has been claimed!`);
+                                        console.log(`   # Reward: ${claimedTask.reward}`);
                                     } catch (error) {
-                                        console.log(` [#] Unable to claim task "${task.title}", please try to claim it manually.`);
+                                        console.log(`   # Unable to claim task "${task.title}", please try to claim it manually.`);
                                     }
                                 }
                             } else if (
@@ -175,10 +168,10 @@ let cronJobRunning = false;
                                 try {
                                     const claimedTask = await retry(() => claimTaskReward(token, task.id), 'claimTaskReward');
 
-                                    console.log(` [>] Task "${claimedTask.title}" has been claimed!`);
-                                    console.log(` [>] Reward: ${claimedTask.reward}`);
+                                    console.log(`   > Task "${claimedTask.title}" has been claimed!`);
+                                    console.log(`   > Reward: ${claimedTask.reward}`);
                                 } catch (error) {
-                                    console.log(` [!] Unable to claim task "${task.title}".`);
+                                    console.log(`   ! Unable to claim task "${task.title}".`);
                                 }
                             }
                             
@@ -187,7 +180,7 @@ let cronJobRunning = false;
                         });
                     });
 
-                    await askQuestion('\n [!] Back to main menu [ENTER]');
+                    await askQuestion('\n   ! Back to main menu [ENTER]');
                 }
                 
                 // @MENU: 5 - Claim Farm Reward
@@ -195,23 +188,13 @@ let cronJobRunning = false;
                     const claimResponse = await retry(() => claimFarmReward(token), 'claimFarmReward');
 
                     if (claimResponse) {
-                        console.log(' [#] Farm reward claimed successfully!');
+                        console.log('\n   # Farm reward claimed successfully!');
                     }
 
-                    const runAgain = await askQuestion(' [?] Run farm reward claim every 9 hours? (y/n): ');
+                    const runAgain = await askQuestion('   ? Run farm reward claim every 9 hours? (y/n): ');
 
-                    if (runAgain.toLowerCase() === 'yes' || runAgain.toLowerCase() === 'ye' || runAgain.toLowerCase() === 'y') {
-                        cronJobRunning = true;
-                        console.log(' [-] Setting up daily reward cron job...');
-                        setupFarmReward(queries).then(() => {
-                            console.log(' [-] Daily reward cron job has been completed.');
-                            cronJobRunning = false;
-                        }).catch(error => {
-                            console.error(' [!] Error setting up daily reward cron job:', error);
-                            cronJobRunning = false;
-                        });
-
-                        console.log(' [-] Cron job is set, exiting the main loop.');
+                    if (['yes', 'ye', 'y'].includes(runAgain.toLowerCase())) {
+                        cronJobID = 2; cronJobRunning = true;
                         break;
                     }
                 }
@@ -219,37 +202,36 @@ let cronJobRunning = false;
                 // @MENU: 6 - Start Farming Session
                 if (choice == '6') {
                     try {
-                        const farmingSession = await retry(() => startFarmingSession(token), 'startFarmingSession');
-                
-                        console.log(` [#] Farming session started!`);
-                        console.log(` [#] Start time: ${formatDate(farmingSession.startTime)}`);
-                        console.log(` [#] End time: ${formatDate(farmingSession.endTime)}`);
-                
-                        cronJobRunning = true;
-                        console.log(' [-] Setting up farming session cron job...');
+                        await retry(() => startFarmingSession(token), 'startFarmingSession');
+                        console.log(`\n   # Farming session started!`);
 
-                        await Promise.all([
-                            setupCronJob(queries),
-                            setupBalanceCheck(queries)
-                        ]);
-                
-                        console.log(' [-] All cron jobs have been completed.');
+                        cronJobID = 3; cronJobRunning = true;
                     } catch (error) {
-                        console.error(' [!] Error setting up cron jobs:', error);
+                        console.error('   ! Error setting up cron jobs:', error);
                     }
 
                     break;
                 }
             }
-        } else {
-            console.log(' [*] A cron job is currently running. Please wait...');
-            await sleep(1000);
         }
     }
 
     if (cronJobRunning) {
-        console.log(' > Cron job is running.');
         rl.close();
-        await new Promise(resolve => setInterval(resolve, 1000 * 60 * 60 * 24));
+
+        if (cronJobID == 1){
+            setupDailyReward(cronJobQueries)
+        }
+
+        if (cronJobID == 2){
+            setupFarmReward(cronJobQueries)
+        }
+
+        if (cronJobID == 3){
+            await Promise.all([
+                setupCronJob(cronJobQueries),
+                setupBalanceCheck(cronJobQueries)
+            ]);
+        }
     }
 })();

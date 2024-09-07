@@ -12,9 +12,9 @@ async function claimFarmReward(token) {
         return data;
     } catch (error) {
         if (error.response.data.message === `It's too early to claim`) {
-            console.error('\n [!] Claim failed! It\'s too early to claim.');
+            console.error('\n   ! Claim failed. It\'s too early to claim.');
         } else {
-            console.error(`\n [!] Error occured from farm claim: ${error}`);
+            console.error(`\n   ! Error occured from farm claim: ${error}`);
         }
     }
 }

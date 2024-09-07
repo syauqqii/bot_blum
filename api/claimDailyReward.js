@@ -12,9 +12,9 @@ async function claimDailyReward(token) {
         return data;
     } catch (error) {
         if (error.response.data.message === 'same day') {
-            console.error('\n [!] Failed, you already claim this day.');
+            console.error('\n   ! Failed, you already claim this day.');
         } else {
-            console.error(`\n [!] Error occured from daily claim: ${error}`);
+            console.error(`\n   ! Error occured from daily claim: ${error}`);
         }
     }
 }
