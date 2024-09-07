@@ -3,8 +3,7 @@ const readline = require('readline');
 
 const { setupCronJob, setupBalanceCheck, setupDailyReward, setupFarmReward } = require('./cronJob');
 const { getAllQueryIds, extractQueryIds } = require('./fileHandler');
-const { formatDate } = require('./helper/formatDate');
-const { sleep, retry } = require('./helper/helper');
+const { formatDate, sleep, retry } = require('./helpers');
 
 const {
     claimDailyReward, claimFarmReward, claimGamePoints, claimTaskReward, getBalance,
@@ -18,13 +17,13 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
-const JSON_FILE_NAME = process.env.JSON_FILE_NAME || 'blum.json';
+const JSON_FILE_NAME = process.env.JSON_FILE_NAME || 'blumAccount.json';
 
 const MAX_DELAY_PER_TASK = parseInt(process.env.MAX_DELAY_PER_TASK) || 5;
 const MIN_DELAY_PER_TASK = parseInt(process.env.MIN_DELAY_PER_TASK) || 3;
 
-const MAX_POINT = parseInt(process.env.MAX_POINT) || 225;
-const MIN_POINT = parseInt(process.env.MIN_POINT) || 192;
+const MAX_POINT = parseInt(process.env.MAX_POINT) || 221;
+const MIN_POINT = parseInt(process.env.MIN_POINT) || 197;
 
 function askQuestion(query) {
     return new Promise(resolve => rl.question(query, resolve));
@@ -37,34 +36,33 @@ let cronJobRunning = false;
 
     while (true) {
         if (!cronJobRunning) {
-            console.clear();
-            header();
-            menu();
+            console.clear(); header(); menu();
 
             choice = await askQuestion(' ? Choose: (0-6) ');
 
+            // @MENU : (Not 0-6) - Invalid
             if (!/^[0-6]$/.test(choice)) {
-                await askQuestion('\n ! Invalid choice. Press [ENTER]');
-                continue;
+                await askQuestion('\n ! Invalid choice. Press [ENTER]'); continue;
             }
 
-            if (choice === '0') {
-                // MENU: 0
-                console.log('\n > Exiting program.'); process.exit();
-            } else if (choice === '1') {
-                // MENU: 1
+            // @MENU : 0 - Exit Program
+            if (choice === '0') process.exit();
+
+            // @MENU : 1 - Add Account
+            if (choice === '1') {
                 console.clear(); header(parseInt(choice));
 
                 await extractQueryIds(JSON_FILE_NAME, await askQuestion('   + Input URL: '));
                 await askQuestion('\n > Process completed. Press [ENTER]');
-            } else if (['2', '3', '4', '5', '6'].includes(choice)) {
-                // Get Account for (Menu: 2,3,4,5,6)
+            }
+
+            // @MENU : 2, 3, 4, 5, 6 - Validation
+            if (['2', '3', '4', '5', '6'].includes(choice)) {
                 console.clear(); header(parseInt(choice));
                 const queryData = getAllQueryIds(JSON_FILE_NAME);
 
                 if (!queryData || queryData.length === 0) {
-                    await askQuestion('\n ! No account found. Please add account first. [ENTER]');
-                    continue;
+                    await askQuestion('\n ! Add account please. Press [ENTER]'); continue;
                 }
 
                 console.log('   # List of accounts:');
@@ -82,12 +80,12 @@ let cronJobRunning = false;
                     continue;
                 }
 
-                const selectedAccount = queryData[accountChoice - 1];
-                const queries = selectedAccount.query_id;
+                const queries = queryData[accountChoice - 1].query_id;
                 token = await retry(() => getToken(queries), 'getToken');
                 const username = await retry(() => getUsername(token), 'getUsername');
                 const balance = await retry(() =>getBalance(token), 'getBalance');
 
+                // @MENU: 2 - Claim Daily Reward
                 if (choice == '2') {
                     const reward = await retry(() => claimDailyReward(token), 'claimDailyReward');
 
@@ -112,10 +110,10 @@ let cronJobRunning = false;
                         console.log(' [-] Cron job is set, exiting the main loop.');
                         break;
                     }
-                } else if (choice == '4') {
-                    console.clear();
-                    header(parseInt(choice));
-                    
+                }
+                
+                // @MENU: 3 - Auto Playing Tickets
+                if (choice == '3') {
                     let i = 0;
                     if (balance.playPasses > 0) {
                         let counter = balance.playPasses;
@@ -144,10 +142,10 @@ let cronJobRunning = false;
                         await askQuestion(`\n [!] You can't play, you have ${balance.playPasses} chance(s). [ENTER]`);
                         continue;
                     }
-                } else if (choice == '5') {
-                    console.clear();
-                    header(parseInt(choice));
-
+                }
+                
+                // @MENU: 4 - Auto Task
+                if (choice == '4') {
                     const tasksData = await retry(() => getTasks(token), 'getTasks');
 
                     tasksData.forEach((category) => {
@@ -190,10 +188,10 @@ let cronJobRunning = false;
                     });
 
                     await askQuestion('\n [!] Back to main menu [ENTER]');
-                } else if (choice == '6') {
-                    console.clear();
-                    header(parseInt(choice));
-
+                }
+                
+                // @MENU: 5 - Claim Farm Reward
+                if (choice == '5') {
                     const claimResponse = await retry(() => claimFarmReward(token), 'claimFarmReward');
 
                     if (claimResponse) {
@@ -216,10 +214,10 @@ let cronJobRunning = false;
                         console.log(' [-] Cron job is set, exiting the main loop.');
                         break;
                     }
-                } else if (choice == '7') {
-                    console.clear();
-                    header(parseInt(choice));
-
+                }
+                
+                // @MENU: 6 - Start Farming Session
+                if (choice == '6') {
                     try {
                         const farmingSession = await retry(() => startFarmingSession(token), 'startFarmingSession');
                 
@@ -250,7 +248,7 @@ let cronJobRunning = false;
     }
 
     if (cronJobRunning) {
-        console.log(' [*] Cron job is now running. The program will exit to focus on the cron job.');
+        console.log(' > Cron job is running.');
         rl.close();
         await new Promise(resolve => setInterval(resolve, 1000 * 60 * 60 * 24));
     }
