@@ -5,28 +5,27 @@ Enjoy with automation BOT
 ### How to use
 
 1. Clone Repository
-`git clone https://github.com/syauqqii/Bot_BLUM`
+```
+git clone https://github.com/syauqqii/Bot_BLUM
+```
 
-2. Open Folder
-`cd Bot_BLUM`
+3. Open Folder
+```
+cd Bot_BLUM
+```
 
 3. Install Dependencies
-`npm i`
+```
+npm i
+```
 
 4. Run application
-`npm start`
+```
+npm start
+```
 
-### Requirements - Runtime
-
-|**Name**|**Version**|
-|---|---|
-|node js|`22.4.1`|
-
-### Requirements - Module
-
-|**Module**|**Version**|
-|---|---|
-|axios|`1.7.6`|
-|cron|`3.1.7`|
-|dotenv|`16.4.5`|
-|moment|`2.30.1`|
+5. Add account
+```
+Get URL to game, and paste it (with params 'tgWebAppData')
+ex: https://telegram.blablabl.io/#tgWebAppData=blablablablablabla
+```
