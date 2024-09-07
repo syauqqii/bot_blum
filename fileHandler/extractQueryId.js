@@ -12,14 +12,14 @@ const decodeURL = (url) => {
         const tgWebAppData = hashParams.get('tgWebAppData');
         
         if (!tgWebAppData) {
-            console.log("\n [!] Cannot find 'tgWebAppData' parameter.");
+            console.log("\n   ! Cannot find 'tgWebAppData' parameter.");
             return null;
         }
 
         const decodedData = decodeURIComponent(tgWebAppData);
         return decodedData;
     } catch (error) {
-        console.error("\n [!] Invalid URL.");
+        console.error("\n   ! Invalid URL.");
         return null;
     }
 };
@@ -28,18 +28,18 @@ const extractQueryIds = (file, url) => {
     try {
         const decodedData = decodeURL(url);
         if (!decodedData) {
-            throw new Error("\n [!] Failed to decode URL data.");
+            throw new Error("\n   ! Failed to decode URL data.");
         }
 
         const queryData = parseQueryData(decodedData);
         if (!queryData) {
-            throw new Error("\n [!] Failed to parse query data.");
+            throw new Error("\n   ! Failed to parse query data.");
         }
 
         saveQueryId(file, queryData);
         return true;
     } catch (error) {
-        console.error(`\n [!] Error extracting query IDs: ${error.message}`);
+        console.error(`\n   ! Error extracting query IDs: ${error.message}`);
         return false;
     }
 };
@@ -52,7 +52,7 @@ const parseQueryData = (decodedData) => {
         const user = params.get('user');
 
         if (!queryId || !user) {
-            console.error("\n [!] Could not find 'query_id' or 'user' in decoded data.");
+            console.error("\n   ! Could not find 'query_id' or 'user' in decoded data.");
             return null;
         }
 
@@ -62,11 +62,10 @@ const parseQueryData = (decodedData) => {
         return {
             query_id: queryId,
             username: userObj.username,
-            // token: await retry(() => getToken(queryId), 'getToken')
         };
 
     } catch (error) {
-        console.error("\n [!] Error parsing query data: " + error.message);
+        console.error("\n   ! Error parsing query data: " + error.message);
         return null;
     }
 };
@@ -76,7 +75,7 @@ const saveQueryId = (file, queryData) => {
     try {
         data = JSON.parse(fs.readFileSync(file, 'utf8'));
     } catch (error) {
-        console.error("\n [!] Error reading JSON file. Creating a new file.");
+        console.error("\n   ! Error reading JSON file. Creating a new file.");
     }
 
     if (!Array.isArray(data)) {
@@ -89,7 +88,7 @@ const saveQueryId = (file, queryData) => {
         data.push(queryData);
         writeJSONFile(file, data);
     } else {
-        console.log("\n [!] Query ID already exists in the file.");
+        console.log("\n   ! Query ID already exists in the file.");
     }
 };
 

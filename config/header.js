@@ -1,32 +1,17 @@
-function header(options=0) {
-    console.log('\n      ____  _     _    _ __  __ ');
-    console.log('     |  _ \\| |   | |  | |  \\/  |');
-    console.log('     | |_) | |   | |  | | \\  / |');
-    console.log('     |  _ <| |   | |  | | |\\/| |');
-    console.log('     | |_) | |___| |__| | |  | |');
-    console.log('     |____/|______\\____/|_|  |_|\n');
+function header(options = 0) {
+    const headers = {
+        0: { title: 'Automatic Bot Blum', separator: '--------------------' },
+        1: { title: 'Add Account', separator: '-------------' },
+        2: { title: 'Claim Daily Reward', separator: '--------------------' },
+        3: { title: 'Auto Play Tickets', separator: '-------------------' },
+        4: { title: 'Auto Complete Tasks', separator: '---------------------' },
+        5: { title: 'Auto Farming Reward', separator: '---------------------' },
+        6: { title: 'Start Farming Session', separator: '-----------------------' }
+    };
 
-    console.log(' ------------------------------------');
-    if (options === 0) {
-        console.log(' [>]         Automatic Bot        [<]');
-    } else if (options === 1) {
-        console.log(' [>]          Add Account         [<]');
-    } else if (options === 2) {
-        console.log(' [>]        Get List Account      [<]');
-    } else if (options === 3) {
-        console.log(' [>]       Claim Daily Reward     [<]');
-    } else if (options === 4) {
-        console.log(' [>]        Auto Play Tickets     [<]');
-    } else if (options === 5) {
-        console.log(' [>]       Auto Complete Tasks    [<]');
-    } else if (options === 6) {
-        console.log(' [>]      Claim Farming Reward    [<]');
-    } else if (options === 7) {
-        console.log(' [>]     Start Farming Session    [<]');
-    } else if (options === 8) {
-        console.log(' [>]      Another Option Here     [<]');
-    }
-    console.log(' ------------------------------------');
+    const { title, separator } = headers[options] || headers[0];
+    console.log(`\n $ ${title}`);
+    console.log(` ${separator}`);
 }
 
 module.exports = header;

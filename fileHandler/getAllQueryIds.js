@@ -24,19 +24,6 @@ function getAllQueryIds(file) {
     return uniqueQueryData;
 }
 
-function getAllUsernames(file) {
-    const data = readJSONFile(file);
-
-    const usernames = data.map(item => item.username).filter(username => username !== undefined);
-
-    if (usernames.length === 0) {
-        console.log('\n [#] Empty Data.');
-    }
-
-    return usernames;
-}
-
 module.exports = {
-    getAllQueryIds,
-    getAllUsernames
+    getAllQueryIds
 };
