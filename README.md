@@ -1,5 +1,6 @@
 # Bot_BLUM
 Enjoy with automation BOT
+
 <img src="https://github.com/syauqqii/bot_blum/blob/main/bot_blum.png">
 
 ### How to use
