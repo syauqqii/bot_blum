@@ -18,7 +18,7 @@ function getAllQueryIds(file) {
     const uniqueQueryData = Array.from(new Map(data.map(item => [item.query_id, item])).values());
 
     if (uniqueQueryData.length === 0) {
-        console.log('\n [#] Empty Data.');
+        console.log('\n   - Empty Data.');
     }
 
     return uniqueQueryData;

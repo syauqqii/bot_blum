@@ -11,8 +11,7 @@ const {
     getGameId, getTasks, getToken, getUsername, startFarmingSession, startTask//, getTribe
 } = require('./api');
 
-const header = require('./config/header');
-const menu = require('./config/menu');
+const { header, menu } = require('./config/view');
 
 const rl = readline.createInterface({
     input: process.stdin,
