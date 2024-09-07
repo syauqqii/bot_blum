@@ -13,7 +13,6 @@ const {
 
 const header = require('./config/header');
 const menu = require('./config/menu');
-const { getAllUsernames } = require('./fileHandler/getAllQueryIds');
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -43,63 +42,44 @@ let cronJobRunning = false;
             header();
             menu();
 
-            choice = await askQuestion(' [?] Choose a feature: (0-6) ');
+            choice = await askQuestion(' ? Choose: (0-6) ');
 
-            if (!/^[0-7]$/.test(choice)) {
-                await askQuestion('\n [!] Invalid choice! [ENTER]');
+            if (!/^[0-6]$/.test(choice)) {
+                await askQuestion('\n ! Invalid choice. Press [ENTER]');
                 continue;
             }
 
             if (choice === '0') {
-                console.log('\n [!] Exiting program.\n');
-                process.exit();
+                // MENU: 0
+                console.log('\n > Exiting program.'); process.exit();
             } else if (choice === '1') {
-                console.clear();
-                header(1);
-                const url = await askQuestion(' [$] Input URL: ');
-                await extractQueryIds(JSON_FILE_NAME, url);
-                await askQuestion('\n [#] Process completed! [ENTER]');
-            } else if (choice === '2') {
-                console.clear();
-                header(2);
-                const queryData = getAllUsernames(JSON_FILE_NAME);
-                
-                if (!queryData || queryData.length === 0) {
-                    await askQuestion('\n [!] No account found. Please add account first. [ENTER]');
-                    continue;
-                }
+                // MENU: 1
+                console.clear(); header(parseInt(choice));
 
-                console.log('\n [*] List of accounts:');
-                queryData.forEach((username, _) => {
-                    console.log(`     - @${username}`);
-                });
-
-                await askQuestion('\n [#] Process completed! [ENTER]');
-            } else if (choice === '3' || choice === '4' || choice === '5' || choice === '6' || choice === '7') {
-                console.clear();
-                header(parseInt(choice));
-
+                await extractQueryIds(JSON_FILE_NAME, await askQuestion('   + Input URL: '));
+                await askQuestion('\n > Process completed. Press [ENTER]');
+            } else if (['2', '3', '4', '5', '6'].includes(choice)) {
+                // Get Account for (Menu: 2,3,4,5,6)
+                console.clear(); header(parseInt(choice));
                 const queryData = getAllQueryIds(JSON_FILE_NAME);
-                
+
                 if (!queryData || queryData.length === 0) {
-                    await askQuestion('\n [!] No account found. Please add account first. [ENTER]');
+                    await askQuestion('\n ! No account found. Please add account first. [ENTER]');
                     continue;
                 }
 
-                console.log('\n [*] List of accounts:');
+                console.log('   # List of accounts:');
                 queryData.forEach((account, index) => {
-                    console.log(`     ${index + 1}. @${account.username}`);
+                    console.log(`      ${index + 1}. @${account.username}`);
                 });
-                console.log('\n     0. Back to main menu');
+                console.log('\n      0. Main menu');
 
-                const accountChoice = await askQuestion('\n [?] Choose an account (0-' + queryData.length + '): ');
+                const accountChoice = await askQuestion('\n   ? Choose an account: (0-' + queryData.length + ') ');
+
+                if (accountChoice == '0') continue;
 
                 if (!/^[0-9]\d*$/.test(accountChoice) || accountChoice < 0 || accountChoice > queryData.length) {
-                    await askQuestion('\n [!] Invalid choice! [ENTER]');
-                    continue;
-                }
-
-                if (accountChoice == '0') {
+                    await askQuestion('\n ! Invalid choice! [ENTER]');
                     continue;
                 }
 
@@ -109,23 +89,20 @@ let cronJobRunning = false;
                 const username = await retry(() => getUsername(token), 'getUsername');
                 const balance = await retry(() =>getBalance(token), 'getBalance');
 
-                if (choice == '3') {
-                    console.clear();
-                    header(parseInt(choice));
-                    
+                if (choice == '2') {
                     const reward = await retry(() => claimDailyReward(token), 'claimDailyReward');
 
                     if (reward) {
-                        console.log(` [#] Daily reward claimed successfully!`);
+                        console.log(` # Daily reward claimed successfully!`);
                     }
 
-                    console.log(` [>] Balance '@${username}': ${balance.availableBalance}`);
-                    const runAgain = await askQuestion('\n [#] Run daily reward claim auto 24h? (y/n): ');
+                    console.log(`   $ Balance '@${username}': ${balance.availableBalance} BP`);
+                    const runAgain = await askQuestion('\n   ? Run daily reward claim auto 24h? (y/n): ');
 
-                    if (runAgain.toLowerCase() === 'yes' || runAgain.toLowerCase() === 'y' || runAgain.toLowerCase() === 'ye') {
+                    if (['yes', 'ye', 'y'].includes(runAgain.toLowerCase())) {
                         cronJobRunning = true;
                         console.log(' [-] Setting up daily reward cron job...');
-                        setupDailyReward(token).then(() => {
+                        setupDailyReward(queries).then(() => {
                             console.log(' [-] Daily reward cron job has been completed.');
                             cronJobRunning = false;
                         }).catch(error => {
@@ -229,7 +206,7 @@ let cronJobRunning = false;
                     if (runAgain.toLowerCase() === 'yes' || runAgain.toLowerCase() === 'ye' || runAgain.toLowerCase() === 'y') {
                         cronJobRunning = true;
                         console.log(' [-] Setting up daily reward cron job...');
-                        setupFarmReward(token).then(() => {
+                        setupFarmReward(queries).then(() => {
                             console.log(' [-] Daily reward cron job has been completed.');
                             cronJobRunning = false;
                         }).catch(error => {
@@ -255,8 +232,8 @@ let cronJobRunning = false;
                         console.log(' [-] Setting up farming session cron job...');
 
                         await Promise.all([
-                            setupCronJob(token),
-                            setupBalanceCheck(token)
+                            setupCronJob(queries),
+                            setupBalanceCheck(queries)
                         ]);
                 
                         console.log(' [-] All cron jobs have been completed.');
