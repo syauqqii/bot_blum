@@ -3,7 +3,7 @@ const axios = require('axios');
 async function startTask(token, taskId, title) {
     try {
         const { data } = await axios({
-            url: `https://game-domain.blum.codes/api/v1/tasks/${taskId}/start`,
+            url: `https://earn-domain.blum.codes/api/v1/tasks/${taskId}/start`,
             method: 'POST',
             headers: { Authorization: token },
             data: null,
