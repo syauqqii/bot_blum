@@ -3,7 +3,7 @@ const axios = require('axios');
 async function getTribe(token) {
     try {
         const response = await axios({
-            url: 'https://game-domain.blum.codes/api/v1/tribe/my',
+            url: 'https://tribe-domain.blum.codes/api/v1/tribe/my',
             method: 'GET',
             headers: { Authorization: token },
         });
