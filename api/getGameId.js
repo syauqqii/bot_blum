@@ -2,7 +2,7 @@ const axios = require('axios');
 
 async function getGameId(token) {
     const { data } = await axios({
-        url: 'https://game-domain.blum.codes/api/v1/game/play',
+        url: 'https://game-domain.blum.codes/api/v2/game/play',
         method: 'POST',
         headers: { Authorization: token },
         data: null,
